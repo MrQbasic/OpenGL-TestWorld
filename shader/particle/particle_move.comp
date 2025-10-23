@@ -1,0 +1,61 @@
+#version 450 core
+
+#define LOCAL_SIZE_X 8
+
+layout (local_size_x = LOCAL_SIZE_X, local_size_y = 1, local_size_z = 1) in;
+
+#define structSizePacked 11
+struct Particle{
+    float q;
+    float m;
+    vec3 pos;
+    vec3 vel;
+    vec3 force; //used only for calc
+};
+
+layout(std430, binding = 0) buffer InstanceData {
+    float data[];
+};
+
+uniform float timeStep;
+
+void main() {
+    uvec3 id = gl_GlobalInvocationID;
+
+    Particle part;
+    
+    //read from pack struct to unpacked
+    part.m   = data[structSizePacked*id.x+1];
+    part.pos   = vec3(data[structSizePacked*id.x+2], data[structSizePacked*id.x+3], data[structSizePacked*id.x+4]);
+    part.vel   = vec3(data[structSizePacked*id.x+5], data[structSizePacked*id.x+6], data[structSizePacked*id.x+7]); 
+    part.force = vec3(data[structSizePacked*id.x+8], data[structSizePacked*id.x+9], data[structSizePacked*id.x+10]); 
+    
+    
+    
+    //do boundary check
+    //vec3 boundaryfactor = floor(abs(part.pos));
+
+    //calc accel, vel, pos
+    vec3 accel = part.force / part.m;
+
+    part.vel += accel * timeStep;
+
+    //part.vel = boundaryfactor;
+
+    part.pos += part.vel * timeStep;
+
+
+
+    //write back vel and pos
+    data[structSizePacked*id.x+2] = part.pos.x;
+    data[structSizePacked*id.x+3] = part.pos.y;
+    data[structSizePacked*id.x+4] = part.pos.z;
+    data[structSizePacked*id.x+5] = part.vel.x;
+    data[structSizePacked*id.x+6] = part.vel.y;
+    data[structSizePacked*id.x+7] = part.vel.z;    
+    
+    //clear out force for next calc
+    data[structSizePacked*id.x+8] = 0;
+    data[structSizePacked*id.x+9] = 0;
+    data[structSizePacked*id.x+10] = 0;
+}

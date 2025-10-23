@@ -1,0 +1,71 @@
+#version 450 core
+
+#define LOCAL_SIZE_Y 2
+
+layout (local_size_x = 1, local_size_y = LOCAL_SIZE_Y, local_size_z = 1) in;
+
+#define structSizePacked 11
+struct Particle{
+    float q;
+    float m;
+    vec3 pos;
+    vec3 vel;
+    vec3 accel; //used only for calc
+};
+
+layout(std430, binding = 0) buffer InstanceData {
+    float data[];
+};
+
+shared vec3 bufferVal[LOCAL_SIZE_Y];
+
+#define E0 8.8541878128e-12
+#define PI 3.1415926535
+
+void main() {
+    uvec3 id = gl_GlobalInvocationID;
+
+    Particle part_a;
+    Particle part_b;
+    
+    //read from pack struct to unpacked
+    part_a.q   = data[structSizePacked*id.x];
+    part_a.m   = data[structSizePacked*id.x+1];
+    part_a.pos = vec3(data[structSizePacked*id.x+2], data[structSizePacked*id.x+3], data[structSizePacked*id.x+4]);
+    part_a.vel = vec3(data[structSizePacked*id.x+5], data[structSizePacked*id.x+6], data[structSizePacked*id.x+7]); 
+
+    part_b.q   = data[structSizePacked*id.y];
+    part_b.m   = data[structSizePacked*id.y+1];
+    part_b.pos = vec3(data[structSizePacked*id.y+2], data[structSizePacked*id.y+3], data[structSizePacked*id.y+4]);
+    part_b.vel = vec3(data[structSizePacked*id.y+5], data[structSizePacked*id.y+6], data[structSizePacked*id.y+7]);
+    
+    vec3 pos_ab = part_a.pos - part_b.pos;
+
+    //force acting on a
+    
+    bufferVal[gl_LocalInvocationID.y] =  (normalize(pos_ab) / (length(pos_ab) * length(pos_ab))) * (part_a.q * part_b.q); 
+
+
+    //particle cant be influenced by itself
+    if(id.x == id.y){
+        bufferVal[gl_LocalInvocationID.y] = vec3(0);
+    }
+
+    barrier();
+
+    for(uint i=LOCAL_SIZE_Y; i<0; i++){
+        if(gl_LocalInvocationID.y < i){
+            bufferVal[gl_LocalInvocationID.y] += bufferVal[gl_LocalInvocationID.y + i];
+        }
+        barrier();
+    }
+
+    //do the final writeback of the force
+    if(gl_LocalInvocationID.y == 0){
+        //change location
+        data[structSizePacked*id.x+8]  += bufferVal[0].x;
+        data[structSizePacked*id.x+9]  += bufferVal[0].y;
+        data[structSizePacked*id.x+10] += bufferVal[0].z;
+    }
+    barrier();
+}

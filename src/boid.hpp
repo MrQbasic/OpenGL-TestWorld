@@ -76,13 +76,13 @@ public:
     void render() {
         glUseProgram(this->shaderID);
         this->vertexBuffer->bind();
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, boidBuffer);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, boidBuffer);
         glUniformMatrix4fv(this->shaderUniformLocations[0],   1, GL_FALSE, &projectionMatrix[0][0]);
         glUniformMatrix4fv(this->shaderUniformLocations[1],   1, GL_FALSE, &viewMatrix[0][0]);
         glUniform3fv(this->shaderUniformLocations[2], 1, &this->position.x);
         glUniform3fv(this->shaderUniformLocations[3], 1, &this->scale.x);
         glDrawElementsInstanced(GL_TRIANGLES, this->vertexBuffer->size(), GL_UNSIGNED_INT, 0, boidCount);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
         this->vertexBuffer->unbind();
         glUseProgram(0);
         renderBoundingBox(this->position, this->scale, 0);

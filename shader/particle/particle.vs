@@ -2,53 +2,43 @@
 
 layout(location = 0) in vec3 aPos;
 
-layout(std430, binding = 1) buffer InstanceData {
-    float boidData[];
+
+#define structSize 11
+
+layout(std430, binding = 0) buffer InstanceData {
+    float data[];
 };
 
 uniform mat4 u_projection;
 uniform mat4 u_view;
-uniform vec3 u_cagePos;
-uniform vec3 u_cageSize;
-
-out int id;
+uniform vec3 u_pos;
+uniform vec3 u_scale;
 
 out vec3 tex;
 
+float scaler = 0.08f;   //size of cubes
+
+
 void main() {
-    id = gl_InstanceID;
-    vec3 position = vec3(boidData[id*6],boidData[id*6+1],boidData[id*6+2]);
-    vec3 vel = vec3(boidData[id*6+3],boidData[id*6+4],boidData[id*6+5]);
+    int id = gl_InstanceID;
 
-    if(any(lessThan(position, vec3(0))) || any(greaterThan(position, u_cageSize))){
-        tex = vec3(1,0,0);
-    }else if(any(lessThan(position, vec3(1.0f))) || any(greaterThan(position, u_cageSize-vec3(1.0f)))){
-        tex = vec3(1,1,0);
-    }else{
-        tex = vec3(0,1,1);
-    }
+    vec3 pos;
+    pos.x = data[id*structSize+2];
+    pos.y = data[id*structSize+3];
+    pos.z = data[id*structSize+4];
 
-
-    //calc rotation from position data
-    vec3 velNormalized = normalize(vel);
-
-    vec3 rotation = vec3(0);
-    rotation.x = asin(velNormalized.y);
-    rotation.y = acos(velNormalized.x) * sign(velNormalized.z) - 3.1415926535 * 0.5;
+    vec3 vel;
+    vel.x = data[id*structSize+5];
+    vel.y = data[id*structSize+6];
+    vel.z = data[id*structSize+7];
 
 
-    float cx = cos(rotation.x), sx = sin(rotation.x);
-    float cy = cos(rotation.y), sy = sin(rotation.y);
-    float cz = cos(rotation.z), sz = sin(rotation.z);
+    vec3 cageCenter = u_pos + (u_scale / 2);
 
-    mat3 rotMat = mat3(
-        cy * cz,                      cy * sz,                      -sy,
-        sx * sy * cz - cx * sz,       sx * sy * sz + cx * cz,       sx * cy,
-        cx * sy * cz + sx * sz,       cx * sy * sz - sx * cz,       cx * cy
-    );
+    //velocity is the color
+    tex = vel;
 
-
-    vec3 vertexPos = (aPos * rotMat) + position + u_cagePos;
+    vec3 vertexPos = (aPos * scaler) + (pos * u_scale) + cageCenter;
 
     gl_Position = u_projection * u_view * vec4(vertexPos, 1.0);
 }

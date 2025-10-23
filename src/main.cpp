@@ -106,17 +106,20 @@ int main(){
     Entity_BoidSim boidSim2(glm::vec3(20,0,20), glm::vec3(0), glm::vec3(40), 160);
 
 
-
-    int cnt = 5;
+    int cnt = 8;
+    float sizeDist = 0.1f;
     glm::vec3 size = glm::vec3(15);
-    Entity_ParticleSim particleSim(glm::vec3(-25,0,20), size);
+    Entity_ParticleSim particleSim(glm::vec3(-35,0,20), size);
     for(int x=0; x<cnt; x++){
         for(int y=0; y<cnt; y++){
             for(int z=0; z<cnt; z++){
                 struct Particle *e = new struct Particle();
-                e->pos.x = size.x / (float) (cnt+1) * (x+1);
-                e->pos.y = size.y / (float) (cnt+1) * (y+1);
-                e->pos.z = size.z / (float) (cnt+1) * (z+1);
+                e->pos.x = (sizeDist / (cnt+1)) * (x+1) -(sizeDist/2);
+                e->pos.y = (sizeDist / (cnt+1)) * (y+1) -(sizeDist/2);
+                e->pos.z = (sizeDist / (cnt+1)) * (z+1) -(sizeDist/2);
+                e->q = randFloat(-1, 1);
+                e->m = 100.0f;
+                e->vel = glm::vec3(0);
                 particleSim.addParticle(e);
             }
         }
@@ -127,6 +130,7 @@ int main(){
 
     glm::vec3 camPos(0, 10, 0);
     glm::vec2 camRot(0.0f);
+    glm::vec2 keyRotCnt {0};
     SDL_WarpMouseInWindow(window, 200, 400);
 
     Uint64 timeNow = SDL_GetPerformanceCounter();
@@ -154,6 +158,8 @@ int main(){
         //cam movement
         camRot.y = mouseX * speed_rot;
         camRot.x = ((float)mouseWindowY / 480.0f - 0.5) * 3.1415 ;
+        keyRotCnt += KeyRot * 0.001f * (float)dt;
+        camRot += keyRotCnt;
         //apply cam movement
         float dx = (back - forward);
         float dz = (left - right); 
@@ -161,6 +167,7 @@ int main(){
         camPos.x += (+dx * speed * dt * sin(camRot.y)) + (+dz * speed * dt * cos(camRot.y));
         camPos.z += (-dx * speed * dt * cos(camRot.y)) - (-dz * speed * dt * sin(camRot.y));
         camPos.y += dy * speed * dt;
+
 
 
         //reset buffer
@@ -179,6 +186,8 @@ int main(){
             teapots.entities->at(i)->setRotation(0, c , 0);
         }
 
+
+        particleSim.update(0.01);
         
         
         //render everything

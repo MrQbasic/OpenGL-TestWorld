@@ -22,6 +22,7 @@ bool paused = false;
 
 float scrollPos = 10 * 10;
 
+glm::vec2 KeyRot {0};
 
 void handleUserInput(SDL_Window* window, bool &WindowClose){
     SDL_Event event;
@@ -45,7 +46,15 @@ void handleUserInput(SDL_Window* window, bool &WindowClose){
                     case SDLK_LSHIFT:
                         down = 0.0f; break;
                     case SDLK_p:
-                        paused ^= 1;
+                        paused ^= 1; break;
+                    case SDLK_UP:
+                        KeyRot.x = 0; break;
+                    case SDLK_DOWN:
+                        KeyRot.x = 0; break;
+                    case SDLK_LEFT:
+                        KeyRot.y = 0; break;
+                    case SDLK_RIGHT:
+                        KeyRot.y = 0; break;
                 }
                 break;
             case SDL_KEYDOWN:
@@ -62,16 +71,14 @@ void handleUserInput(SDL_Window* window, bool &WindowClose){
                         up = camSpeed; break;
                     case SDLK_LSHIFT:
                         down = camSpeed; break;
-                    /*
                     case SDLK_UP:
-                        camRot.x += speed * dt * 0.1; break;
+                        KeyRot.x = -1; break;
                     case SDLK_DOWN:
-                        camRot.x -= speed * dt * 0.1; break;
+                        KeyRot.x = 1; break;
                     case SDLK_LEFT:
-                        camRot.y += speed * dt * 0.1; break;
+                        KeyRot.y = -1; break;
                     case SDLK_RIGHT:
-                        camRot.y -= speed * dt * 0.1; break;
-                    */
+                        KeyRot.y = 1; break;
                 }
                 break;
             case SDL_MOUSEMOTION:
