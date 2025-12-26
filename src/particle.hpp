@@ -32,14 +32,17 @@ public:
         //init the buffer if needed
         if(ssboOk == false) updateSSBO();
         
+        //calculate forces between paricles
         glUseProgram(this->computeShaderID[0]);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, particleBuffer);
         glDispatchCompute(particles.size(), particles.size(), 1);
         
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
+        //move particles
         glUseProgram(this->computeShaderID[1]);
         glUniform1f(this->shaderUniformLocations[4], timeStep);
+        glUniform3fv(this->shaderUniformLocations[5], 1, &this->scale.x);
         glDispatchCompute(particles.size(), 1, 1);
 
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -84,7 +87,7 @@ private:
             std::cout << "Error loading particle shaders" << std::endl;
         }
 
-        this->shaderUniformLocations = new int[5];
+        this->shaderUniformLocations = new int[6];
         //render shader
         shaderUniformLocations[0] = glGetUniformLocation(renderShaderID, "u_projection");
         shaderUniformLocations[1] = glGetUniformLocation(renderShaderID, "u_view");
@@ -92,6 +95,8 @@ private:
         shaderUniformLocations[3] = glGetUniformLocation(renderShaderID, "u_scale");
         //move shader
         shaderUniformLocations[4] = glGetUniformLocation(computeShaderID[1], "timeStep");
+        shaderUniformLocations[5] = glGetUniformLocation(computeShaderID[1], "boxSize");
+
     }
 
     bool ssboOk = false;

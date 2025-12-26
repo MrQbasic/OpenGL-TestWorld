@@ -19,6 +19,8 @@ layout(std430, binding = 0) buffer InstanceData {
 
 uniform float timeStep;
 
+uniform vec3 boxSize;
+
 void main() {
     uvec3 id = gl_GlobalInvocationID;
 
@@ -46,6 +48,11 @@ void main() {
 
 
 
+    part.pos = mod(part.pos*2 + 1.0, 2.0) - 1.0;
+    part.pos /= 2;
+
+
+
     //write back vel and pos
     data[structSizePacked*id.x+2] = part.pos.x;
     data[structSizePacked*id.x+3] = part.pos.y;
@@ -53,7 +60,7 @@ void main() {
     data[structSizePacked*id.x+5] = part.vel.x;
     data[structSizePacked*id.x+6] = part.vel.y;
     data[structSizePacked*id.x+7] = part.vel.z;    
-    
+
     //clear out force for next calc
     data[structSizePacked*id.x+8] = 0;
     data[structSizePacked*id.x+9] = 0;

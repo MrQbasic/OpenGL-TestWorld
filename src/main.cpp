@@ -106,7 +106,7 @@ int main(){
     Entity_BoidSim boidSim2(glm::vec3(20,0,20), glm::vec3(0), glm::vec3(40), 160);
 
 
-    int cnt = 8;
+    int cnt = 3;
     float sizeDist = 0.1f;
     glm::vec3 size = glm::vec3(15);
     Entity_ParticleSim particleSim(glm::vec3(-35,0,20), size);
